@@ -2,6 +2,7 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signInWithPopup,
+    signInAnonymously,
     signOut,
     updateProfile
 } from 'firebase/auth';
@@ -227,7 +228,52 @@ export const quickRegisterWithUsername = async (login: string) => {
 };
 
 export const signInWithGoogleAuth = async () => {
-  const result = await signInWithPopup(auth, googleProvider);
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    if (result?.user) {
+      const userRef = doc(db, 'users', result.user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: result.user.uid,
+          login: result.user.email?.split('@')[0] || 'user',
+          normalizedLogin: normalizeLogin(result.user.email?.split('@')[0] || 'user'),
+          authEmail: result.user.email,
+          fullName: result.user.displayName || 'Пользователь',
+          avatar: result.user.photoURL || 'https://picsum.photos/seed/user/150/150',
+          role: 'user',
+          followersCount: 0,
+          followingCount: 0,
+          postsCount: 0,
+          listingsCount: 0,
+          soldCount: 0,
+          rating: 0,
+          verified: false,
+          quickRegistration: false,
+          registrationLevel: 'social',
+          provider: 'google',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        await setDoc(userRef, {
+          updatedAt: serverTimestamp(),
+          provider: 'google'
+        }, { merge: true });
+      }
+    }
+    return result;
+  } catch (error: any) {
+    if (error.code === 'auth/operation-not-allowed') {
+      throw new Error('auth/operation-not-allowed');
+    }
+    throw error;
+  }
+};
+
+export const signInAnonymouslyAuth = async () => {
+  const result = await signInAnonymously(auth);
   if (result?.user) {
     const userRef = doc(db, 'users', result.user.uid);
     const userSnap = await getDoc(userRef);
@@ -235,11 +281,11 @@ export const signInWithGoogleAuth = async () => {
     if (!userSnap.exists()) {
       await setDoc(userRef, {
         uid: result.user.uid,
-        login: result.user.email?.split('@')[0] || 'user',
-        normalizedLogin: normalizeLogin(result.user.email?.split('@')[0] || 'user'),
-        authEmail: result.user.email,
-        fullName: result.user.displayName || 'Пользователь',
-        avatar: result.user.photoURL || 'https://picsum.photos/seed/user/150/150',
+        login: 'guest-' + result.user.uid.slice(0, 5),
+        normalizedLogin: 'guest-' + result.user.uid.slice(0, 5),
+        authEmail: null,
+        fullName: 'Гость',
+        avatar: 'https://picsum.photos/seed/guest/150/150',
         role: 'user',
         followersCount: 0,
         followingCount: 0,
@@ -248,17 +294,12 @@ export const signInWithGoogleAuth = async () => {
         soldCount: 0,
         rating: 0,
         verified: false,
-        quickRegistration: false,
-        registrationLevel: 'social',
-        provider: 'google',
+        quickRegistration: true,
+        registrationLevel: 'guest',
+        provider: 'anonymous',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-    } else {
-      await setDoc(userRef, {
-        updatedAt: serverTimestamp(),
-        provider: 'google'
-      }, { merge: true });
     }
   }
   return result;

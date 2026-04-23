@@ -61,6 +61,7 @@ import {
     logOutAuth,
     quickRegisterWithUsername,
     registerWithUsername,
+    signInAnonymouslyAuth,
     signInWithGoogleAuth
 } from '../services/auth';
 import { Language, Theme, UserProfile, View } from "../types";
@@ -1202,11 +1203,14 @@ export const LoginPage = ({ onBack }: { onBack?: () => void }) => {
       if (provider === 'google') {
         await signInWithGoogleAuth();
         if (onBack) onBack();
+      } else if (provider === 'guest') {
+        await signInAnonymouslyAuth();
+        if (onBack) onBack();
       } else {
         await handleSocialLoginDemo(provider);
       }
     } catch (err: any) {
-      setError(err.message || getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err) || err.message);
     } finally {
       setLoading(false);
     }
@@ -1450,6 +1454,15 @@ export const LoginPage = ({ onBack }: { onBack?: () => void }) => {
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-4 h-4" />
             <span className="text-xs">Google</span>
           </button>
+          
+          <button 
+            onClick={() => handleSocialLogin('guest')}
+            className="flex items-center justify-center gap-3 bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800 py-3 rounded-2xl font-bold text-brand-600 dark:text-brand-400 shadow-sm active:scale-95 transition-all hover:bg-brand-100 dark:hover:bg-brand-800"
+          >
+            <User size={16} />
+            <span className="text-xs">Гость</span>
+          </button>
+
           <button 
             onClick={() => handleSocialLogin('yandex')}
             className="flex items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-3 rounded-2xl font-bold text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
