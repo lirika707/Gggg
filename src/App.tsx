@@ -8,6 +8,7 @@ import {
     LayoutGrid,
     Wheat
 } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -519,6 +520,7 @@ export default function App() {
         />
         </div>
       </div>
+      <Analytics />
     </I18nContext.Provider>
   );
 }
