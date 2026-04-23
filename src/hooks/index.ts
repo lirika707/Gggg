@@ -193,78 +193,87 @@ export const useAuth = () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // Check role in Firestore
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            const role = (user.email === 'nterra558@gmail.com' || user.email === 'admin@admin.app' || data.role === 'admin') ? 'admin' : data.role;
-            setUserRole(role);
-            
-            // Auto-upgrade nterra558@gmail.com to admin if not already
-            if (role === 'admin' && data.role !== 'admin') {
-              await updateDoc(doc(db, 'users', user.uid), { role: 'admin' });
-            }
-            
-            // Sync Google data if needed (e.g. if name/photo changed)
-            if (user.providerData[0]?.providerId === 'google.com') {
-              const updates: any = { updatedAt: serverTimestamp() };
-              let hasUpdates = false;
+        // Check role in Firestore with a simple retry for transient "offline" states
+        const fetchRoleWithRetry = async (retries = 3, delay = 1000) => {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              const role = (user.email === 'nterra558@gmail.com' || user.email === 'admin@admin.app' || data.role === 'admin') ? 'admin' : data.role;
+              setUserRole(role);
               
-              if (!data.fullName && user.displayName) {
-                updates.fullName = user.displayName;
-                const names = user.displayName.split(' ');
-                updates.firstName = names[0] || '';
-                updates.lastName = names.slice(1).join(' ') || '';
-                hasUpdates = true;
-              }
-              if (!data.avatar && user.photoURL) {
-                updates.avatar = user.photoURL;
-                hasUpdates = true;
+              // Auto-upgrade nterra558@gmail.com to admin if not already
+              if (role === 'admin' && data.role !== 'admin') {
+                await updateDoc(doc(db, 'users', user.uid), { role: 'admin' });
               }
               
-              if (hasUpdates) {
-                await updateDoc(doc(db, 'users', user.uid), updates);
+              // Sync Google data if needed
+              if (user.providerData[0]?.providerId === 'google.com') {
+                const updates: any = { updatedAt: serverTimestamp() };
+                let hasUpdates = false;
+                
+                if (!data.fullName && user.displayName) {
+                  updates.fullName = user.displayName;
+                  const names = user.displayName.split(' ');
+                  updates.firstName = names[0] || '';
+                  updates.lastName = names.slice(1).join(' ') || '';
+                  hasUpdates = true;
+                }
+                if (!data.avatar && user.photoURL) {
+                  updates.avatar = user.photoURL;
+                  hasUpdates = true;
+                }
+                
+                if (hasUpdates) {
+                  await updateDoc(doc(db, 'users', user.uid), updates);
+                }
               }
+            } else {
+              // Create user doc if not exists
+              const names = (user.displayName || '').split(' ');
+              const firstName = names[0] || '';
+              const lastName = names.slice(1).join(' ') || '';
+              const defaultLogin = user.email?.split('@')[0] || 'user';
+              
+              const newUser = {
+                uid: user.uid,
+                email: user.email,
+                login: defaultLogin,
+                normalizedLogin: defaultLogin.toLowerCase().replace(/[^a-z0-9_.]/g, ''),
+                authEmail: user.email,
+                firstName,
+                lastName,
+                fullName: user.displayName || 'Пользователь',
+                photoURL: user.photoURL || 'https://picsum.photos/seed/user/150/150',
+                avatar: user.photoURL || 'https://picsum.photos/seed/user/150/150',
+                role: (user.email === 'nterra558@gmail.com' || user.email === 'admin@admin.app') ? 'admin' : 'user',
+                location: 'Бишкек, Кыргызстан',
+                bio: '',
+                phone: user.phoneNumber || '',
+                followersCount: 0,
+                followingCount: 0,
+                postsCount: 0,
+                listingsCount: 0,
+                soldCount: 0,
+                rating: 0,
+                verified: false,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              };
+              await setDoc(doc(db, 'users', user.uid), newUser);
+              setUserRole(newUser.role as 'admin' | 'user');
             }
-          } else {
-            // Create user doc if not exists (e.g. first time Google login)
-            const names = (user.displayName || '').split(' ');
-            const firstName = names[0] || '';
-            const lastName = names.slice(1).join(' ') || '';
-            const defaultLogin = user.email?.split('@')[0] || 'user';
-            
-            const newUser = {
-              uid: user.uid,
-              email: user.email,
-              login: defaultLogin,
-              normalizedLogin: defaultLogin.toLowerCase().replace(/[^a-z0-9_.]/g, ''),
-              authEmail: user.email,
-              firstName,
-              lastName,
-              fullName: user.displayName || 'Пользователь',
-              photoURL: user.photoURL || 'https://picsum.photos/seed/user/150/150',
-              avatar: user.photoURL || 'https://picsum.photos/seed/user/150/150',
-              role: (user.email === 'nterra558@gmail.com' || user.email === 'admin@admin.app') ? 'admin' : 'user',
-              location: 'Бишкек, Кыргызстан',
-              bio: '',
-              phone: user.phoneNumber || '',
-              followersCount: 0,
-              followingCount: 0,
-              postsCount: 0,
-              listingsCount: 0,
-              soldCount: 0,
-              rating: 0,
-              verified: false,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            };
-            await setDoc(doc(db, 'users', user.uid), newUser);
-            setUserRole(newUser.role as 'admin' | 'user');
+          } catch (error) {
+            if (retries > 0 && error instanceof Error && error.message.includes('offline')) {
+              console.warn(`Firestore is offline, retrying role fetch... (${retries} attempts left)`);
+              setTimeout(() => fetchRoleWithRetry(retries - 1, delay * 2), delay);
+            } else {
+              console.error("Error fetching user role:", error);
+            }
           }
-        } catch (error) {
-          console.error("Error fetching user role:", error);
-        }
+        };
+
+        fetchRoleWithRetry();
       } else {
         setUserRole(null);
       }
