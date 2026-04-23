@@ -340,7 +340,7 @@ export const MarketplacePage = ({ onProductClick, onAddClick }: { onProductClick
   );
 };
 
-export const ProductDetailsPage = ({ product, onChatClick }: { product: Product; onChatClick?: (seller: any) => void }) => (
+export const ProductDetailsPage = ({ product, onChatClick, onProfileClick }: { product: Product; onChatClick?: (seller: any) => void; onProfileClick?: (userId: string) => void }) => (
   <div className="pb-32 bg-slate-50 dark:bg-slate-950 min-h-screen">
     {/* Large Product Image */}
     <div className="relative h-[400px] w-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-12">
@@ -429,6 +429,7 @@ export const ProductDetailsPage = ({ product, onChatClick }: { product: Product;
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Чат</span>
             </button>
             <button 
+              onClick={() => onProfileClick && onProfileClick(product.seller.id || 'system')}
               className="flex flex-col items-center justify-center gap-2 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-transform group"
             >
               <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 group-hover:bg-slate-600 group-hover:text-white transition-colors">

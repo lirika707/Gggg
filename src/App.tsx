@@ -9,7 +9,7 @@ import {
     Wheat
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     db,
     doc,
@@ -95,6 +95,48 @@ export default function App() {
   const [showAIReport, setShowAIReport] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<UserProfile | null>(null);
   const [user, setUser] = useState<UserProfile>(MOCK_USER);
+
+  // --- Browser History Navigation Support ---
+  const isInternalChange = useRef(true);
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      isInternalChange.current = false; // Prevents pushing this new state back to history
+      if (event.state && event.state.view) {
+        setView(event.state.view);
+      } else {
+        // If no state, we are at the beginning
+        setView('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Set initial state if not present
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'home' }, '', '');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Sync state changes TO history
+  useEffect(() => {
+    if (isInternalChange.current) {
+      // Don't push if we are already on this view in history (e.g. initial load)
+      if (window.history.state?.view !== view) {
+        window.history.pushState({ view }, '', '');
+      }
+    }
+    // Reset to true for the next change, which might be internal (onClick)
+    isInternalChange.current = true;
+  }, [view]);
+
+  // Special helper for programmatic navigation if needed
+  const navigateTo = (newView: View) => {
+    isInternalChange.current = true;
+    setView(newView);
+  };
 
   useEffect(() => {
     const handleNavigate = (e: any) => setView(e.detail);
@@ -225,7 +267,11 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 px-6 mt-6">
-              <UnifiedAICard onScanClick={() => setShowAIReport(true)} />
+              <UnifiedAICard 
+                onScanClick={() => setView('ai')} 
+                crops={parsedCrops} 
+                weather={weather}
+              />
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center text-center cursor-pointer" onClick={() => setView('market')}>
                 <span className="text-emerald-600 dark:text-emerald-400 mb-2"><Wheat size={24} /></span>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('my_cultures')}</h3>
@@ -269,6 +315,53 @@ export default function App() {
               });
               setView('chat_room');
             }}
+            onProfileClick={async (userId) => {
+              try {
+                const docSnap = await getDoc(doc(db, 'users', userId));
+                if (docSnap.exists()) {
+                  const data = docSnap.data();
+                  setSelectedUserProfile({
+                    id: userId,
+                    fullName: data.displayName || 'Пользователь',
+                    name: data.displayName || 'Пользователь',
+                    email: data.email || '',
+                    avatar: data.photoURL || 'https://picsum.photos/seed/user/150/150',
+                    role: data.role || 'user',
+                    location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
+                    bio: data.bio || '',
+                    followersCount: data.followersCount || 0,
+                    followingCount: data.followingCount || 0,
+                    listingsCount: data.listingsCount || 0,
+                    soldCount: data.soldCount || 0,
+                    rating: data.rating || 0,
+                    joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Март 2024'
+                  });
+                  setView('profile');
+                } else {
+                  // Fallback for mock/non-existent users
+                  const seller = selectedProduct?.seller || { name: 'Фермер', avatar: 'https://picsum.photos/seed/farmer/150/150', rating: 4.5 };
+                  setSelectedUserProfile({
+                    id: userId,
+                    fullName: seller.name,
+                    name: seller.name,
+                    email: '',
+                    avatar: seller.avatar,
+                    role: 'Продавец',
+                    location: selectedProduct?.location || 'Бишкек, Кыргызстан',
+                    bio: 'Опытный фермер',
+                    followersCount: 120,
+                    followingCount: 45,
+                    listingsCount: 12,
+                    soldCount: 89,
+                    rating: seller.rating,
+                    joinedDate: 'Январь 2023'
+                  });
+                  setView('profile');
+                }
+              } catch (e) {
+                console.error("Error fetching user profile:", e);
+              }
+            }}
           />
         ) : null;
       case 'news_details':
@@ -288,12 +381,13 @@ export default function App() {
               setView('community_chats');
             } else if (item.type === 'user') {
               const fetchAndShowProfile = async () => {
+                const userId = item.id;
                 try {
-                  const docSnap = await getDoc(doc(db, 'users', item.id));
+                  const docSnap = await getDoc(doc(db, 'users', userId));
                   if (docSnap.exists()) {
                     const data = docSnap.data();
                     setSelectedUserProfile({
-                      id: item.id,
+                      id: userId,
                       fullName: data.displayName || 'Пользователь',
                       name: data.displayName || 'Пользователь',
                       email: data.email || '',
@@ -309,9 +403,28 @@ export default function App() {
                       joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Март 2024'
                     });
                     setView('profile');
+                  } else {
+                    // Fallback for users found in search results but not in DB
+                    setSelectedUserProfile({
+                      id: userId,
+                      fullName: item.title,
+                      name: item.title,
+                      email: '',
+                      avatar: item.thumbnails?.[0] || 'https://picsum.photos/seed/user/150/150',
+                      role: 'Пользователь',
+                      location: 'Кыргызстан',
+                      bio: item.description || '',
+                      followersCount: 0,
+                      followingCount: 0,
+                      listingsCount: 0,
+                      soldCount: 0,
+                      rating: 5.0,
+                      joinedDate: 'Март 2024'
+                    });
+                    setView('profile');
                   }
                 } catch (e) {
-                  console.error(e);
+                  console.error("Error fetching user profile:", e);
                 }
               };
               fetchAndShowProfile();
@@ -440,21 +553,7 @@ export default function App() {
           onSearchClick={['home', 'market', 'ai', 'feed', 'communities'].includes(view) ? () => setView('ai_search') : undefined}
           onWeatherClick={() => setView('weather_details')}
           onBack={() => {
-            if (view === 'details') setView('market');
-            else if (view === 'news_details') setView('home');
-            else if (view === 'community_chats') setView('communities');
-            else if (view === 'chat_room') setView('community_chats');
-            else if (view === 'sell') setView('market');
-            else if (view === 'ai') setView('home');
-            else if (view === 'market') setView('home');
-            else if (view === 'communities') setView('home');
-            else if (view === 'theme_settings') setView('settings');
-            else if (view === 'lang_settings') setView('settings');
-            else if (view === 'settings') setView('home');
-            else if (view === 'login') setView('home');
-            else if (view === 'feed') setView('home');
-            else if (view === 'profile') setView('feed');
-            else setView('home');
+            window.history.back();
           }}
           onMessageClick={() => setView('communities')}
           onCartClick={() => setView('market')}

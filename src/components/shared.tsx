@@ -20,38 +20,78 @@ import {
     Users
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { chatWithAI } from '../services/aiAPI';
 import { NotificationBell } from '../components/NotificationBell';
 import { useI18n } from "../i18n";
 import { Listing, Product, View } from "../types";
 import { cn } from "../utils";
 
-export const UnifiedAICard = ({ onScanClick }: { onScanClick: () => void }) => {
+export const UnifiedAICard = ({ onScanClick, crops, weather }: { 
+  onScanClick: () => void, 
+  crops: string[], 
+  weather: { temp: string, desc: string, city: string } | null 
+}) => {
+  const [advice, setAdvice] = useState<string>('Загрузка совета...');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAdvice = async () => {
+      if (!crops.length && !weather) return;
+      setLoading(true);
+      try {
+        const cropsStr = crops.join(', ');
+        const weatherStr = weather ? `${weather.city}: ${weather.temp}°C, ${weather.desc}` : 'данные погоды недоступны';
+        
+        const prompt = `Дай ОДИН очень короткий (макс 10-15 слов) практический совет фермеру на сегодня. 
+        Культуры: ${cropsStr || 'не указаны'}. 
+        Погода: ${weatherStr}. 
+        Совет должен быть на русском языке, полезным и вдохновляющим. Ответь ТОЛЬКО текстом совета.`;
+
+        const result = await chatWithAI(
+          [{ role: 'user', content: prompt }], 
+          "Ты - экспертный агроном-консультант системы EGIN. Давай краткие и точные советы."
+        );
+        setAdvice(result);
+      } catch (err) {
+        setAdvice('Проверьте ваши культуры и погоду для получения совета.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdvice();
+  }, [crops, weather]);
+
   return (
-    <div className="relative w-full overflow-hidden bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+    <div className="relative w-full overflow-hidden bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm min-h-[180px] flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Совет ИИ</h2>
-        <div className="flex gap-2 text-[10px] font-medium text-slate-500">
-          <span>+12%</span>
-          <span>5%</span>
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} className="text-emerald-500" />
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Совет ИИ</h2>
         </div>
       </div>
 
-      <div className="space-y-2 mb-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
-          Полить: <span className="text-emerald-600 dark:text-emerald-400">через 45 мин</span>
-        </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Влажность 38%. 1.5л/м².
-        </p>
+      <div className="flex-1 space-y-2 mb-4">
+        {loading ? (
+          <div className="space-y-2 animate-pulse">
+            <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-3/4"></div>
+            <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/2"></div>
+          </div>
+        ) : (
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
+            {advice}
+          </h3>
+        )}
       </div>
 
       <motion.button 
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 transition-all"
+        onClick={onScanClick}
+        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 transition-all mt-auto"
       >
-        Полить
+        Подробнее в чате
       </motion.button>
     </div>
   );

@@ -125,39 +125,55 @@ export const AIAssistantPage = ({ setView, weather }: { setView: (v: View) => vo
         createdAt: serverTimestamp()
       });
 
-      // Build dynamic chat history for Gemini
-      const history = messages.filter(m => m.id !== 'welcome').map(msg => {
-        const msgParts: any[] = [];
-        if (msg.text.trim()) {
-          msgParts.push({ text: msg.text });
+      // --- Local Routing (Save API Tokens) ---
+      const normalizedText = text.toLowerCase().trim();
+      let aiText = '';
+
+      const localAnswers: Record<string, string> = {
+        'что ты умеешь?': 'Я — специализированный ИИ-агроном EGIN. Я умею:\n\n1. **Диагностировать болезни** растений по фото.\n2. **Давать советы** по уходу, поливу и удобрениям.\n3. **Анализировать цены** на сельхозпродукцию на местных рынках.\n4. **Прогнозировать риски** на основе текущей погоды.\n\nПросто отправьте мне фото или напишите свой вопрос!',
+        'кто ты?': 'Я ваш цифровой помощник в мире сельского хозяйства, созданный на базе искусственного интеллекта. Моя цель — помочь вам вырастить здоровый урожай и продать его выгодно.',
+        'как пользоваться?': 'Это просто! Вы можете:\n- Нажать на иконку камеры, чтобы отправить фото растения на анализ.\n- Написать вопрос текстом (например: "Как бороться с тлей на огурцах?").\n- Выбрать один из готовых быстрых ответов над полем ввода.',
+      };
+
+      if (localAnswers[normalizedText] && !currentImage) {
+        aiText = localAnswers[normalizedText];
+        // Simulate a small delay for "human" feel
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } else {
+        // Build dynamic chat history for Gemini
+        const history = messages.filter(m => m.id !== 'welcome').map(msg => {
+          const msgParts: any[] = [];
+          if (msg.text.trim()) {
+            msgParts.push({ text: msg.text });
+          }
+          return { role: msg.sender === 'user' ? 'user' : 'model', parts: msgParts };
+        });
+        
+        let finalPrompt = text;
+        if (weather) {
+          finalPrompt = `[Текущая погода: ${weather.temp}°C, ${weather.desc}]. ${finalPrompt}`;
         }
-        return { role: msg.sender === 'user' ? 'user' : 'model', parts: msgParts };
-      });
-      
-      let finalPrompt = text;
-      if (weather) {
-        finalPrompt = `[Текущая погода: ${weather.temp}°C, ${weather.desc}]. ${finalPrompt}`;
+        
+        history.push({ role: 'user', parts: [{ text: finalPrompt }] });
+
+        const systemInstruction = `Вы — опытный и дружелюбный ИИ-помощник фермер и агроном. Ваша задача — помогать фермерам. Вы отлично разбираетесь в болезнях растений, урожае, удобрениях, ценах на местном рынке и поиске покупателей. 
+            
+            Если вас просят проанализировать фото культуры:
+            - Проведите детальный осмотр: определите признаки заболеваний (грибок, вредители, нехватка нутриентов).
+            - Оцените степень поражения.
+            - Учитывайте предоставленные погодные условия для оценки рисков (например, высокая влажность способствует грибку).
+            - Дайте четкий алгоритм действий: что делать прямо сейчас, какие меры профилактики принять.
+            
+            Если вас просят дать рекомендации:
+            - Проанализируйте историю диалога, чтобы понять контекст.
+            - Учитывайте предоставленные текущие погодные условия.
+            - Предложите конкретные, структурированные агротехнические советы на ближайшие дни.
+            
+            Общайтесь профессионально, просто и понятно, как опытный коллега-агроном. Форматируйте ответ красиво (используйте Markdown, заголовки, списки). Будьте конкретны и лаконичны.`;
+
+        // Call our Cloud Function or Direct SDK
+        aiText = await chatWithAI(history, systemInstruction, currentImage);
       }
-      
-      history.push({ role: 'user', parts: [{ text: finalPrompt }] });
-
-      const systemInstruction = `Вы — опытный и дружелюбный ИИ-помощник фермер и агроном. Ваша задача — помогать фермерам. Вы отлично разбираетесь в болезнях растений, урожае, удобрениях, ценах на местном рынке и поиске покупателей. 
-          
-          Если вас просят проанализировать фото культуры:
-          - Проведите детальный осмотр: определите признаки заболеваний (грибок, вредители, нехватка нутриентов).
-          - Оцените степень поражения.
-          - Учитывайте предоставленные погодные условия для оценки рисков (например, высокая влажность способствует грибку).
-          - Дайте четкий алгоритм действий: что делать прямо сейчас, какие меры профилактики принять.
-          
-          Если вас просят дать рекомендации:
-          - Проанализируйте историю диалога, чтобы понять контекст.
-          - Учитывайте предоставленные текущие погодные условия.
-          - Предложите конкретные, структурированные агротехнические советы на ближайшие дни.
-          
-          Общайтесь профессионально, просто и понятно, как опытный коллега-агроном. Форматируйте ответ красиво (используйте Markdown, заголовки, списки). Будьте конкретны и лаконичны.`;
-
-      // Call our Cloud Function instead of direct SDK in browser
-      const aiText = await chatWithAI(history, systemInstruction, currentImage);
 
       // Save AI response to Firestore
       await addDoc(collection(db, 'users', currentUser.uid, 'ai_messages'), {
@@ -266,12 +282,13 @@ export const AIAssistantPage = ({ setView, weather }: { setView: (v: View) => vo
       </div>
 
       {/* Quick Actions */}
-      <div className="px-6 py-2 flex gap-2 overflow-x-auto no-scrollbar bg-slate-50 dark:bg-slate-950">
+      <div className="px-6 py-2 flex gap-2 overflow-x-auto no-scrollbar bg-slate-50 dark:bg-slate-950 shrink-0">
         {[
-          { label: 'Определить болезнь', icon: Sparkles },
-          { label: 'Узнать цены на картофель', icon: ShoppingBag },
-          { label: 'Как ухаживать за помидорами', icon: User },
-          { label: 'Предложить рекомендации', icon: Lightbulb },
+          { label: 'Что ты умеешь?', icon: Sparkles },
+          { label: 'Как пользоваться?', icon: ChevronRight },
+          { label: 'Определить болезнь', icon: Scan },
+          { label: 'Цены на продукты', icon: ShoppingBag },
+          { label: 'Совет агронома', icon: Lightbulb },
         ].map((action) => (
           <button
             key={action.label}

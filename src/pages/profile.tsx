@@ -422,8 +422,12 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{liveUser.fullName}</h2>
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-950/30 rounded-full">
+                    <Star size={12} className="fill-amber-400 text-amber-400" />
+                    <span className="text-xs font-black text-amber-600 dark:text-amber-400">{liveUser.rating || 0}</span>
+                  </div>
                   {liveUser.verified && (
                     <div className="bg-brand-500 text-white p-0.5 rounded-full shadow-sm shadow-brand-500/20">
                       <Check size={12} strokeWidth={4} />
@@ -506,35 +510,20 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
           </p>
         )}
 
-        {/* Horizontal Stats Section */}
-        <div className="grid grid-cols-3 gap-2 py-6 border-y border-slate-50 dark:border-slate-900/50 mb-8">
-          <div className="text-center">
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{liveUser.listingsCount || 0}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Объявления</p>
-          </div>
-          <div className="text-center border-x border-slate-50 dark:border-slate-900/50">
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{liveUser.soldCount || 0}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Продано</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1">
-              <Star size={18} className="fill-amber-400 text-amber-400" />
-              <p className="text-2xl font-black text-slate-900 dark:text-white">{liveUser.rating || 0}</p>
+        {/* Compact Stats Row */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 mb-6">
+          {[
+            { value: liveUser.listingsCount, label: 'Объявления' },
+            { value: liveUser.soldCount, label: 'Продано' },
+            { value: liveUser.followersCount, label: 'Подписчики' },
+            { value: liveUser.followingCount, label: 'Подписки' },
+            { value: liveUser.postsCount, label: 'Посты' }
+          ].map((stat, idx) => (
+            <div key={idx} className="flex flex-col items-center min-w-[70px] px-3 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+              <span className="text-sm font-black text-slate-900 dark:text-white">{stat.value || 0}</span>
+              <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">{stat.label}</span>
             </div>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Рейтинг</p>
-          </div>
-          <div className="text-center pt-4">
-            <p className="text-xl font-black text-slate-900 dark:text-white">{liveUser.followersCount || 0}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Подписчики</p>
-          </div>
-          <div className="text-center pt-4 border-x border-slate-50 dark:border-slate-900/50">
-            <p className="text-xl font-black text-slate-900 dark:text-white">{liveUser.followingCount || 0}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Подписки</p>
-          </div>
-          <div className="text-center pt-4">
-            <p className="text-xl font-black text-slate-900 dark:text-white">{liveUser.postsCount || 0}</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Посты</p>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -543,7 +532,6 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
         <div className="flex gap-6 border-b border-slate-100 dark:border-slate-800 mb-6 overflow-x-auto no-scrollbar">
           {[
             { id: 'listings', label: 'Объявления' },
-            { id: 'orders', label: 'Заказы' },
             { id: 'blog', label: 'Блог' },
             { id: 'favorites', label: 'Избранное' }
           ].map((tab) => (
@@ -574,8 +562,8 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
                   <span>Добавить новое объявление</span>
                 </button>
               )}
-              {MOCK_PRODUCTS.slice(0, 2).map(item => (
-                <div key={item.id} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-emerald-100 transition-colors">
+              {MOCK_PRODUCTS.filter(p => !isCurrentUser ? (p.seller.name === liveUser.name || p.seller.name === liveUser.fullName) : true).slice(0, 3).map(item => (
+                <div key={item.id} onClick={() => setView('details')} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-emerald-100 transition-colors cursor-pointer">
                   <img src={item.image} referrerPolicy="no-referrer" className="w-16 h-16 rounded-2xl object-cover shadow-sm" />
                   <div className="flex-1">
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">{item.name}</h4>
@@ -584,6 +572,11 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
                   <ChevronRight size={18} className="text-slate-300 dark:text-slate-600 group-hover:translate-x-1 transition-transform" />
                 </div>
               ))}
+              {MOCK_PRODUCTS.filter(p => !isCurrentUser ? (p.seller.name === liveUser.name || p.seller.name === liveUser.fullName) : true).length === 0 && (
+                <div className="col-span-full py-12 text-center bg-slate-50 dark:bg-slate-900/50 rounded-[40px] border border-dashed border-slate-200 dark:border-slate-800">
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400">У пользователя пока нет объявлений</p>
+                </div>
+              )}
             </>
           )}
 
@@ -592,7 +585,7 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                onClick={() => {}} 
+                onClick={() => setView('details')} 
                 viewMode="list"
                 isFavorite={true}
                 onToggleFavorite={(e) => { e.stopPropagation(); toggleFavorite(product.id); }}
@@ -600,26 +593,6 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
             ))
           )}
           
-          {activeTab === 'orders' && (
-            MOCK_ORDERS.map(order => (
-              <div key={order.id} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-                <img src={order.image} referrerPolicy="no-referrer" className="w-16 h-16 rounded-2xl object-cover shadow-sm" />
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{order.productName}</h4>
-                    <span className="text-[10px] px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-full font-black uppercase tracking-tighter">
-                      {order.status === 'delivered' ? 'Доставлено' : order.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <p className="text-emerald-600 font-black text-xs">{order.price}</p>
-                    <p className="text-[10px] text-slate-400 font-bold">{order.date}</p>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-
           {activeTab === 'blog' && (
             <div className="col-span-full space-y-4">
               {isCurrentUser && (
@@ -715,11 +688,9 @@ export const ProfilePage = ({ user, onUpdateUser, theme, setTheme, onSellClick, 
         <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
           {[
             { label: 'Настройки профиля', icon: User },
-            { label: 'Упаковка и доставка', icon: Package },
-            { label: 'Язык (Русский)', icon: Globe },
             { label: 'Уведомления', icon: Bell },
           ].map((item, i) => (
-            <button key={i} className={`w-full px-6 py-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${i !== 3 ? 'border-b border-slate-50 dark:border-slate-800' : ''}`}>
+            <button key={i} className={`w-full px-6 py-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${i !== 1 ? 'border-b border-slate-50 dark:border-slate-800' : ''}`}>
               <div className="flex items-center gap-4">
                 <div className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl">
                   <item.icon size={20} />

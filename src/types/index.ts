@@ -17,6 +17,7 @@ export interface Product extends Listing {
   badge?: 'new' | 'popular' | 'top';
   sellerId?: string;
   seller: {
+    id?: string;
     name: string;
     avatar: string;
     rating: number;
