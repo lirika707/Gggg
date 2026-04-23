@@ -1,0 +1,58 @@
+name: Build Android APK with Capacitor
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Install Capacitor dependencies
+        run: |
+          npm install @capacitor/core @capacitor/cli
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+
+      - name: Set up Android SDK
+        run: |
+          echo yes | sdkmanager --licenses
+          sdkmanager "platforms;android-33"
+          sdkmanager "build-tools;33.0.0"
+
+      - name: Add Android platform to Capacitor
+        run: |
+          npx cap add android
+
+      - name: Sync Capacitor with Android project
+        run: |
+          npx cap sync android
+
+      - name: Build release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: apk
+          path: android/app/build/outputs/apk/release/app-release.apk
