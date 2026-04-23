@@ -13,7 +13,6 @@ import {
     Search,
     Share2,
     ShieldCheck,
-    ShoppingCart,
     Star,
     User
 } from 'lucide-react';
@@ -400,7 +399,12 @@ export const ProductDetailsPage = ({ product, onChatClick, onProfileClick }: { p
               </div>
             </div>
             <div className="flex-1">
-              <h4 className="font-black text-slate-900 dark:text-white text-base">{product.seller.name}</h4>
+              <button 
+                onClick={() => onProfileClick && onProfileClick(product.seller.id || 'system')}
+                className="font-black text-slate-900 dark:text-white text-base hover:text-brand-600 transition-colors"
+              >
+                {product.seller.name}
+              </button>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">Официальный поставщик • 5 лет на рынке</p>
             </div>
             <div className="flex items-center gap-1">
@@ -461,9 +465,7 @@ export const ProductDetailsPage = ({ product, onChatClick, onProfileClick }: { p
                 <h5 className="font-black text-slate-900 dark:text-white text-xs truncate mb-1">{item.name}</h5>
                 <div className="flex items-center justify-between">
                   <span className="text-brand-600 dark:text-brand-400 font-black text-sm">{item.price}</span>
-                  <button className="w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
-                    <Plus size={16} />
-                  </button>
+                  <span className="text-[10px] font-bold text-slate-400">Смотреть</span>
                 </div>
               </div>
             ))}
@@ -471,13 +473,11 @@ export const ProductDetailsPage = ({ product, onChatClick, onProfileClick }: { p
         </div>
 
         <div className="mt-10 flex gap-4">
-          <button className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400 border border-slate-100 dark:border-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-            <ShoppingCart size={24} />
-          </button>
-          <button className="flex-1 bg-brand-600 text-white rounded-3xl font-black text-base uppercase tracking-widest shadow-2xl shadow-brand-200 dark:shadow-brand-900/40 active:scale-95 transition-transform flex items-center justify-center gap-3">
-            <span>Купить сейчас</span>
-            <div className="w-1 h-1 bg-white/30 rounded-full" />
-            <span>{product.price}</span>
+          <button 
+            onClick={() => onChatClick && onChatClick(product.seller)}
+            className="flex-1 bg-brand-600 text-white rounded-3xl font-black text-base uppercase tracking-widest shadow-2xl shadow-brand-200 dark:shadow-brand-900/40 active:scale-95 transition-transform flex items-center justify-center gap-3 py-5"
+          >
+            <span>Написать продавцу</span>
           </button>
         </div>
       </div>

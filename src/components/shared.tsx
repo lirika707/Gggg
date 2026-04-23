@@ -12,7 +12,6 @@ import {
     Search,
     Shield,
     ShoppingBag,
-    ShoppingCart,
     Sparkles,
     Star,
     Sun,
@@ -98,7 +97,6 @@ export const UnifiedAICard = ({ onScanClick, crops, weather }: {
 };
 
 export const ListingCard: React.FC<{ listing: Listing | Product; onClick?: () => void }> = ({ listing, onClick }) => {
-  const [count, setCount] = useState(1);
   const product = listing as Product;
 
   return (
@@ -130,23 +128,12 @@ export const ListingCard: React.FC<{ listing: Listing | Product; onClick?: () =>
         </div>
         
         <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-          <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-full p-1 gap-3">
-            <button 
-              onClick={(e) => { e.stopPropagation(); setCount(Math.max(0, count - 1)) }}
-              className="w-8 h-8 flex items-center justify-center bg-brand-200/50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-400 rounded-full"
-            >
-              <Minus size={16} />
-            </button>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 w-4 text-center">{count}</span>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setCount(count + 1) }}
-              className="w-8 h-8 flex items-center justify-center bg-brand-600 text-white rounded-full"
-            >
-              <Plus size={16} />
-            </button>
+          <div className="flex items-center gap-1">
+            <Star size={12} className="text-yellow-500 fill-yellow-500" />
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{listing.rating}</span>
           </div>
-          <button className="w-10 h-10 flex items-center justify-center bg-brand-600 text-white rounded-full shadow-lg shadow-brand-100 dark:shadow-brand-900/20">
-            <ShoppingCart size={18} />
+          <button className="text-[10px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400 hover:underline">
+            Подробнее
           </button>
         </div>
       </div>
@@ -257,26 +244,15 @@ export const ProductCard: React.FC<{
               <Star size={10} className="text-yellow-500 fill-yellow-500" />
               <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{product.rating}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                className={`p-2 rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-400 hover:text-red-500'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onToggleFavorite) onToggleFavorite(e);
-                }}
-              >
-                <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onAddClick) onAddClick(e);
-                }}
-                className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-90 transition-all"
-              >
-                <Plus size={18} strokeWidth={3} />
-              </button>
-            </div>
+            <button
+              className={`p-2 rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-400 hover:text-red-500'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onToggleFavorite) onToggleFavorite(e);
+              }}
+            >
+              <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
+            </button>
           </div>
         </div>
       </motion.div>
@@ -327,15 +303,7 @@ export const ProductCard: React.FC<{
             <Star size={10} className="text-yellow-500 fill-yellow-500" />
             <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{product.rating}</span>
           </div>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onAddClick) onAddClick(e);
-            }}
-            className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-90 transition-all"
-          >
-            <Plus size={18} strokeWidth={3} />
-          </button>
+          <span className="text-[10px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">Смотреть</span>
         </div>
       </div>
     </motion.div>
@@ -380,7 +348,6 @@ export const Header = ({
   showBack, 
   onBack, 
   onMessageClick, 
-  onCartClick, 
   onAddClick, 
   onSearchClick,
   onWeatherClick,
@@ -392,7 +359,6 @@ export const Header = ({
   showBack?: boolean, 
   onBack?: () => void,
   onMessageClick?: () => void,
-  onCartClick?: () => void,
   onAddClick?: () => void,
   onSearchClick?: () => void,
   onWeatherClick?: () => void,
@@ -422,11 +388,6 @@ export const Header = ({
           {onMessageClick && (
             <button onClick={onMessageClick} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
               <MessageSquare size={20} className="text-slate-900 dark:text-white" />
-            </button>
-          )}
-          {onCartClick && (
-            <button onClick={onCartClick} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-              <ShoppingCart size={20} className="text-slate-900 dark:text-white" />
             </button>
           )}
           {onAddClick && (

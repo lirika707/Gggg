@@ -125,8 +125,9 @@ export interface NewsItem {
   date: string;
   image: string;
   author: string;
+  authorId?: string;
   reactions: { type: string; count: number }[];
-  comments: { id: string; user: string; text: string; date: string }[];
+  comments: { id: string; user: string; userId?: string; text: string; date: string }[];
 }
 
 export interface CommunityChat {

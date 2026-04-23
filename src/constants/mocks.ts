@@ -98,6 +98,7 @@ export const MOCK_PRODUCTS: Product[] = [
     rating: 4.8,
     image: 'https://picsum.photos/seed/potato1/800/600',
     seller: {
+      id: 'azamat_123',
       name: 'Азамат Касымов',
       avatar: 'https://picsum.photos/seed/avatar1/150/150',
       rating: 4.9,
@@ -117,6 +118,7 @@ export const MOCK_PRODUCTS: Product[] = [
     rating: 4.6,
     image: 'https://picsum.photos/seed/onion/800/600',
     seller: {
+      id: 'marat_456',
       name: 'Марат Садыков',
       avatar: 'https://picsum.photos/seed/avatar2/150/150',
       rating: 4.7,
@@ -136,6 +138,7 @@ export const MOCK_PRODUCTS: Product[] = [
     rating: 4.9,
     image: 'https://picsum.photos/seed/tomato/800/600',
     seller: {
+      id: 'nurbek_789',
       name: 'Нурбек Алиев',
       avatar: 'https://picsum.photos/seed/avatar3/150/150',
       rating: 5.0,
@@ -154,6 +157,7 @@ export const MOCK_PRODUCTS: Product[] = [
     rating: 4.7,
     image: 'https://picsum.photos/seed/apple/800/600',
     seller: {
+      id: 'aibek_012',
       name: 'Айбек Осмонов',
       avatar: 'https://picsum.photos/seed/avatar4/150/150',
       rating: 4.8,
@@ -430,6 +434,7 @@ export const MOCK_NEWS: NewsItem[] = [
     date: 'Сегодня, 09:00',
     image: 'https://picsum.photos/seed/news1/800/600',
     author: 'Алексей Иванов',
+    authorId: 'alexey_777',
     reactions: [
       { type: '👍', count: 124 },
       { type: '🔥', count: 56 },
@@ -447,6 +452,7 @@ export const MOCK_NEWS: NewsItem[] = [
     date: 'Вчера, 14:20',
     image: 'https://picsum.photos/seed/news2/800/600',
     author: 'Елена Смирнова',
+    authorId: 'elena_888',
     reactions: [
       { type: '📈', count: 89 },
       { type: '🚀', count: 45 }
@@ -462,6 +468,7 @@ export const MOCK_NEWS: NewsItem[] = [
     date: '2 дня назад',
     image: 'https://picsum.photos/seed/news3/800/600',
     author: 'Дмитрий Соколов',
+    authorId: 'dmitry_999',
     reactions: [
       { type: '☀️', count: 210 },
       { type: '🌱', count: 145 }

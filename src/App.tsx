@@ -219,6 +219,54 @@ export default function App() {
     setView('chat_room');
   };
 
+  const handleProfileClick = async (userId: string, sellerData?: any) => {
+    try {
+      const docSnap = await getDoc(doc(db, 'users', userId));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setSelectedUserProfile({
+          id: userId,
+          fullName: data.displayName || data.fullName || 'Пользователь',
+          name: data.displayName || data.fullName || 'Пользователь',
+          email: data.email || '',
+          avatar: data.photoURL || data.avatar || 'https://picsum.photos/seed/user/150/150',
+          role: data.role || 'user',
+          location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
+          bio: data.bio || '',
+          followersCount: data.followersCount || 0,
+          followingCount: data.followingCount || 0,
+          listingsCount: data.listingsCount || 0,
+          soldCount: data.soldCount || 0,
+          rating: data.rating || 0,
+          joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Март 2024'
+        });
+        setView('profile');
+      } else {
+        // Fallback for mock/non-existent users
+        const seller = sellerData || { name: 'Фермер', avatar: 'https://picsum.photos/seed/farmer/150/150', rating: 4.5 };
+        setSelectedUserProfile({
+          id: userId,
+          fullName: seller.name || seller.fullName || 'Пользователь',
+          name: seller.name || seller.fullName || 'Пользователь',
+          email: '',
+          avatar: seller.avatar || 'https://picsum.photos/seed/user/150/150',
+          role: 'Пользователь',
+          location: seller.location || 'Бишкек, Кыргызстан',
+          bio: seller.bio || 'Опытный фермер',
+          followersCount: 120,
+          followingCount: 45,
+          listingsCount: 12,
+          soldCount: 89,
+          rating: seller.rating || 0,
+          joinedDate: 'Январь 2023'
+        });
+        setView('profile');
+      }
+    } catch (e) {
+      console.error("Error fetching user profile:", e);
+    }
+  };
+
   const renderContent = () => {
     if (authLoading) {
       return (
@@ -281,7 +329,7 @@ export default function App() {
               <ListingsSection onListingClick={handleListingClick} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                 <NewsSection onNewsClick={handleNewsClick} />
-                <BlogSection onPostClick={handleNewsClick} />
+                <BlogSection onPostClick={handleNewsClick} onProfileClick={(userId) => handleProfileClick(userId)} />
                 <ReviewsSection />
                 <FAQSection />
               </div>
@@ -315,57 +363,11 @@ export default function App() {
               });
               setView('chat_room');
             }}
-            onProfileClick={async (userId) => {
-              try {
-                const docSnap = await getDoc(doc(db, 'users', userId));
-                if (docSnap.exists()) {
-                  const data = docSnap.data();
-                  setSelectedUserProfile({
-                    id: userId,
-                    fullName: data.displayName || 'Пользователь',
-                    name: data.displayName || 'Пользователь',
-                    email: data.email || '',
-                    avatar: data.photoURL || 'https://picsum.photos/seed/user/150/150',
-                    role: data.role || 'user',
-                    location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
-                    bio: data.bio || '',
-                    followersCount: data.followersCount || 0,
-                    followingCount: data.followingCount || 0,
-                    listingsCount: data.listingsCount || 0,
-                    soldCount: data.soldCount || 0,
-                    rating: data.rating || 0,
-                    joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Март 2024'
-                  });
-                  setView('profile');
-                } else {
-                  // Fallback for mock/non-existent users
-                  const seller = selectedProduct?.seller || { name: 'Фермер', avatar: 'https://picsum.photos/seed/farmer/150/150', rating: 4.5 };
-                  setSelectedUserProfile({
-                    id: userId,
-                    fullName: seller.name,
-                    name: seller.name,
-                    email: '',
-                    avatar: seller.avatar,
-                    role: 'Продавец',
-                    location: selectedProduct?.location || 'Бишкек, Кыргызстан',
-                    bio: 'Опытный фермер',
-                    followersCount: 120,
-                    followingCount: 45,
-                    listingsCount: 12,
-                    soldCount: 89,
-                    rating: seller.rating,
-                    joinedDate: 'Январь 2023'
-                  });
-                  setView('profile');
-                }
-              } catch (e) {
-                console.error("Error fetching user profile:", e);
-              }
-            }}
+            onProfileClick={(userId) => handleProfileClick(userId, selectedProduct.seller)}
           />
         ) : null;
       case 'news_details':
-        return selectedNews ? <NewsDetailsPage news={selectedNews} /> : null;
+        return selectedNews ? <NewsDetailsPage news={selectedNews} onProfileClick={(userId) => handleProfileClick(userId, { name: selectedNews.author })} /> : null;
       case 'ai':
         return <AIAssistantPage setView={setView} weather={weather} />;
       case 'ai_search':
@@ -380,54 +382,7 @@ export default function App() {
               setSelectedCommunityCategory(item);
               setView('community_chats');
             } else if (item.type === 'user') {
-              const fetchAndShowProfile = async () => {
-                const userId = item.id;
-                try {
-                  const docSnap = await getDoc(doc(db, 'users', userId));
-                  if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    setSelectedUserProfile({
-                      id: userId,
-                      fullName: data.displayName || 'Пользователь',
-                      name: data.displayName || 'Пользователь',
-                      email: data.email || '',
-                      avatar: data.photoURL || 'https://picsum.photos/seed/user/150/150',
-                      role: data.role || 'user',
-                      location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
-                      bio: data.bio || '',
-                      followersCount: data.followersCount || 0,
-                      followingCount: data.followingCount || 0,
-                      listingsCount: data.listingsCount || 0,
-                      soldCount: data.soldCount || 0,
-                      rating: data.rating || 0,
-                      joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Март 2024'
-                    });
-                    setView('profile');
-                  } else {
-                    // Fallback for users found in search results but not in DB
-                    setSelectedUserProfile({
-                      id: userId,
-                      fullName: item.title,
-                      name: item.title,
-                      email: '',
-                      avatar: item.thumbnails?.[0] || 'https://picsum.photos/seed/user/150/150',
-                      role: 'Пользователь',
-                      location: 'Кыргызстан',
-                      bio: item.description || '',
-                      followersCount: 0,
-                      followingCount: 0,
-                      listingsCount: 0,
-                      soldCount: 0,
-                      rating: 5.0,
-                      joinedDate: 'Март 2024'
-                    });
-                    setView('profile');
-                  }
-                } catch (e) {
-                  console.error("Error fetching user profile:", e);
-                }
-              };
-              fetchAndShowProfile();
+              handleProfileClick(item.id, { name: item.title, avatar: item.thumbnails?.[0], bio: item.description });
             }
           }} 
         />;
@@ -442,32 +397,7 @@ export default function App() {
       case 'login':
         return <LoginPage onBack={() => setView('home')} />;
       case 'feed':
-        return <FeedPage onProfileClick={(userId) => {
-          const fetchAndShowProfile = async () => {
-            const docSnap = await getDoc(doc(db, 'users', userId));
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setSelectedUserProfile({
-                id: userId,
-                fullName: data.displayName || 'Пользователь',
-                name: data.displayName || 'Пользователь',
-                email: data.email || '',
-                avatar: data.photoURL || 'https://picsum.photos/seed/user/150/150',
-                role: data.role || 'user',
-                location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
-                bio: data.bio || '',
-                followersCount: data.followersCount || 0,
-                followingCount: data.followingCount || 0,
-                listingsCount: data.listingsCount || 0,
-                soldCount: data.soldCount || 0,
-                rating: data.rating || 0,
-                joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Март 2024'
-              });
-              setView('profile');
-            }
-          };
-          fetchAndShowProfile();
-        }} />;
+        return <FeedPage onProfileClick={(userId) => handleProfileClick(userId)} />;
       case 'profile':
         return selectedUserProfile ? (
           <ProfilePage 
@@ -556,7 +486,6 @@ export default function App() {
             window.history.back();
           }}
           onMessageClick={() => setView('communities')}
-          onCartClick={() => setView('market')}
           onAddClick={view === 'market' ? () => setView('sell') : undefined}
           isHome={view === 'home'}
         />

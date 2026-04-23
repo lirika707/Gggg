@@ -53,7 +53,7 @@ export const NewsSection = ({ onNewsClick }: { onNewsClick: (news: NewsItem) => 
   </section>
 );
 
-export const BlogSection = ({ onPostClick }: { onPostClick: (post: any) => void }) => (
+export const BlogSection = ({ onPostClick, onProfileClick }: { onPostClick: (post: any) => void; onProfileClick?: (userId: string) => void }) => (
   <section className="mt-8 px-6">
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -66,6 +66,7 @@ export const BlogSection = ({ onPostClick }: { onPostClick: (post: any) => void 
           id: 'b1', 
           title: 'Как повысить урожайность зерновых', 
           author: 'Азамат Исаев', 
+          authorId: 'author_b1',
           views: '1.2k', 
           icon: BookOpen, 
           image: 'https://picsum.photos/seed/blog1/400/300',
@@ -78,6 +79,7 @@ export const BlogSection = ({ onPostClick }: { onPostClick: (post: any) => void 
           id: 'b2', 
           title: 'Секреты хранения овощей зимой', 
           author: 'Мария Петрова', 
+          authorId: 'author_b2',
           views: '850', 
           icon: BookOpen, 
           image: 'https://picsum.photos/seed/blog2/400/300',
@@ -98,7 +100,15 @@ export const BlogSection = ({ onPostClick }: { onPostClick: (post: any) => void 
           <div className="flex-1">
             <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{post.title}</h4>
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{post.author}</span>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onProfileClick) onProfileClick(post.authorId || 'system');
+                }}
+                className="text-xs text-slate-400 dark:text-slate-500 font-medium hover:text-emerald-500 transition-colors"
+              >
+                {post.author}
+              </button>
               <span className="text-xs text-slate-300 dark:text-slate-700">•</span>
               <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{post.views} просмотров</span>
             </div>
@@ -267,7 +277,7 @@ export const FeedPage = ({ onProfileClick }: { onProfileClick: (userId: string) 
   );
 };
 
-export const NewsDetailsPage = ({ news }: { news: NewsItem }) => {
+export const NewsDetailsPage = ({ news, onProfileClick }: { news: NewsItem; onProfileClick?: (userId: string) => void }) => {
   const [comment, setComment] = useState('');
   const [reactions, setReactions] = useState(news.reactions);
 
@@ -285,7 +295,12 @@ export const NewsDetailsPage = ({ news }: { news: NewsItem }) => {
               {news.date}
             </span>
             <span className="text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">{news.author}</span>
+            <button 
+              onClick={() => onProfileClick && onProfileClick(news.authorId || 'system')}
+              className="text-xs text-slate-400 dark:text-slate-500 font-medium hover:text-brand-600 transition-colors"
+            >
+              {news.author}
+            </button>
           </div>
           
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-6">{news.title}</h2>
@@ -325,7 +340,12 @@ export const NewsDetailsPage = ({ news }: { news: NewsItem }) => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{c.user}</span>
+                      <button 
+                        onClick={() => onProfileClick && onProfileClick(c.userId || 'system')}
+                        className="text-sm font-bold text-slate-900 dark:text-white hover:text-brand-600 transition-colors"
+                      >
+                        {c.user}
+                      </button>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500">{c.date}</span>
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{c.text}</p>
