@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EGIN - Помощник Фермера</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .active-nav { color: #059669; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 select-none">
+
+    <!-- App Container (Mobile View) -->
+    <div class="max-w-md mx-auto min-h-screen flex flex-col bg-slate-50 relative pb-24">
+        
+        <!-- Header -->
+        <header class="px-6 pt-8 pb-4 flex justify-between items-center bg-white border-b border-slate-100 sticky top-0 z-50">
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter uppercase text-emerald-600">EGIN</h1>
+                <p id="screen-title" class="text-[10px] font-black uppercase tracking-widest text-slate-400">Главная</p>
+            </div>
+            <div class="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+        </header>
+
+        <!-- Screens Content -->
+        <main class="flex-1 px-6 py-6 overflow-y-auto no-scrollbar">
+            
+            <!-- 1. HOME SCREEN -->
+            <section id="screen-home" class="screen active space-y-6">
+                <div class="bg-emerald-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-200">
+                    <h2 class="text-2xl font-black leading-tight mb-2">Хорошего урожая, фермер!</h2>
+                    <p class="text-emerald-100 text-sm font-medium">Сегодня +24°C. Идеальное время для полива томатов.</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="switchScreen('ai')" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center text-center gap-3">
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div>
+                        <span class="text-xs font-black uppercase tracking-widest">AI Сканер</span>
+                    </button>
+                    <button onclick="switchScreen('market')" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center text-center gap-3">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>
+                        <span class="text-xs font-black uppercase tracking-widest">Маркет</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. AI DIAGNOSTIC SCREEN -->
+            <section id="screen-ai" class="screen space-y-6">
+                <div class="text-center py-10 px-6 border-2 border-dashed border-slate-200 rounded-[3rem] bg-white">
+                    <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"></path><path d="m4.93 4.93 4.24 4.24"></path><path d="M2 12h8"></path><path d="m4.93 19.07 4.24-4.24"></path><path d="M12 22v-8"></path><path d="m19.07 19.07-4.24-4.24"></path><path d="M22 12h-8"></path><path d="m19.07 4.93-4.24 4.24"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-black mb-2 uppercase">Загрузите фото</h3>
+                    <p class="text-sm text-slate-500 font-medium mb-8">Сфотографируйте больной лист или плод для анализа ИИ</p>
+                    <input type="file" id="ai-upload" class="hidden">
+                    <button onclick="document.getElementById('ai-upload').click()" class="w-full py-5 bg-emerald-600 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">
+                        Выбрать изображение
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. MARKET LIST SCREEN -->
+            <section id="screen-market" class="screen space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-black uppercase tracking-widest text-slate-400">Объявления</h3>
+                    <button onclick="switchScreen('add-product')" class="text-emerald-600 font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                        + Добавить
+                    </button>
+                </div>
+                <!-- Simple Product Card -->
+                <div class="bg-white p-5 rounded-[2rem] border border-slate-100 flex gap-4 shadow-sm">
+                    <div class="w-20 h-20 bg-slate-100 rounded-2xl flex-shrink-0"></div>
+                    <div class="flex flex-col justify-between py-1">
+                        <div>
+                            <h4 class="font-black text-sm uppercase">Семена Моркови</h4>
+                            <p class="text-[10px] font-bold text-slate-400">Голландский сорт, 1кг</p>
+                        </div>
+                        <span class="text-md font-black text-emerald-600">850 сом</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. ADD PRODUCT SCREEN -->
+            <section id="screen-add-product" class="screen space-y-6">
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-4 tracking-widest">Название</label>
+                        <input type="text" placeholder="Название товара" class="w-full bg-white rounded-3xl px-6 py-4 text-sm font-bold border border-slate-100 outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-4 tracking-widest">Цена (сом)</label>
+                        <input type="number" placeholder="500" class="w-full bg-white rounded-3xl px-6 py-4 text-sm font-bold border border-slate-100 outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-4 tracking-widest">Телефон</label>
+                        <input type="tel" placeholder="+996" class="w-full bg-white rounded-3xl px-6 py-4 text-sm font-bold border border-slate-100 outline-none">
+                    </div>
+                    <button class="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-all mt-4">
+                        Опубликовать
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Navbar -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-xl border-t border-slate-100 flex justify-around items-center py-4 px-4 z-50">
+            <button onclick="switchScreen('home')" class="nav-btn p-3 flex flex-col items-center gap-1 active-nav transition-colors" data-id="home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </button>
+            <button onclick="switchScreen('ai')" class="nav-btn p-3 flex flex-col items-center gap-1 text-slate-400 transition-colors" data-id="ai">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"></path><path d="M3.34 7a10 10 0 1 1 17.32 10"></path></svg>
+            </button>
+            <button onclick="switchScreen('market')" class="nav-btn p-3 flex flex-col items-center gap-1 text-slate-400 transition-colors" data-id="market">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Screen Logic -->
+    <script>
+        const titles = {
+            'home': 'Главная',
+            'ai': 'AI Диагностика',
+            'market': 'Маркетплейс',
+            'add-product': 'Продать товар'
+        };
+
+        function switchScreen(id) {
+            // Hide all
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // Show target
+            document.getElementById('screen-' + id).classList.add('active');
+            // Update title
+            document.getElementById('screen-title').textContent = titles[id];
+            
+            // Update nav active state (only for primary tabs)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active-nav');
+                btn.classList.add('text-slate-400');
+                if (btn.getAttribute('data-id') === id || (id === 'add-product' && btn.getAttribute('data-id') === 'market')) {
+                    btn.classList.add('active-nav');
+                    btn.classList.remove('text-slate-400');
+                }
+            });
+
+            // Scroll top
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+    </script>
+</body>
+</html>
