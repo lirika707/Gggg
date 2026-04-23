@@ -357,7 +357,7 @@ export const Header = ({
   onSearchClick?: () => void,
   onWeatherClick?: () => void,
   isHome?: boolean,
-  weather?: { temp: string, desc: string } | null
+  weather?: { temp: string, desc: string, city: string } | null
 }) => (
   <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 dark:border-slate-800">
     <div className="w-full">
@@ -403,7 +403,7 @@ export const Header = ({
           className="w-full flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 -mx-6 px-6 pb-2 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <p className="text-sm font-medium text-slate-900 dark:text-white">Бишкек</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{weather?.city || 'Бишкек'}</p>
             <div className="w-px h-3 bg-slate-200 dark:bg-slate-700" />
             <div className="flex items-center gap-1">
               <Sun size={16} className="text-emerald-500" />

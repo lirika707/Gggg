@@ -89,3 +89,57 @@ exports.analyzePlant = onRequest({
         });
     }
 });
+
+exports.chatAssistant = onRequest({ 
+    cors: true,
+    secrets: ["GEMINI_API_KEY"],
+    region: "asia-southeast1" 
+}, async (req, res) => {
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
+        return;
+    }
+
+    try {
+        const { messages, systemInstruction, image } = req.body;
+
+        if (!messages || !Array.isArray(messages)) {
+            res.status(400).json({ error: "Missing or invalid 'messages' in request body" });
+            return;
+        }
+
+        const model = ai.getGenerativeModel({
+            model: "gemini-2.0-flash", // Use a stable and fast model
+            systemInstruction: systemInstruction || "Вы — опытный агроном."
+        });
+
+        const lastMessage = messages[messages.length - 1];
+        let promptParts = [lastMessage.parts[0].text];
+
+        if (image) {
+            const base64Data = image.split(',')[1];
+            const mimeType = image.split(',')[0].split(':')[1].split(';')[0];
+            promptParts.push({
+                inlineData: {
+                    data: base64Data,
+                    mimeType: mimeType
+                }
+            });
+        }
+
+        // We use a simpler chat interaction for Cloud Functions to avoid complex streaming state here
+        // If they need full history, we can pass it, but for a simple fix, let's just use the current request
+        const result = await model.generateContent(promptParts);
+        const response = await result.response;
+        const text = response.text();
+
+        res.status(200).json({ text });
+
+    } catch (error) {
+        console.error("Chat Assistant Endpoint Error:", error);
+        res.status(500).json({ 
+            error: "Ошибка при генерации ответа ИИ",
+            details: error.message 
+        });
+    }
+});

@@ -41,6 +41,35 @@ export const analyzePlantImage = async (base64Image: string): Promise<PlantDiagn
     }
 };
 
+export const chatWithAI = async (messages: any[], systemInstruction: string, image?: string | null): Promise<string> => {
+    const CHAT_BACKEND_URL = 'https://chatassistant-xxxxxxxx-as.a.run.app'; // Плэйсхолдер, нужно будет заменить
+
+    try {
+        const response = await fetch(CHAT_BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                messages,
+                systemInstruction,
+                image
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.text;
+    } catch (error) {
+        console.error("AI Chat Error:", error);
+        throw error;
+    }
+};
+
 /**
  * Утилита для конвертации файла изображения (из <input type="file">) в base64.
  */

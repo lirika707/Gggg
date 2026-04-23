@@ -118,7 +118,7 @@ export default function App() {
             phone: data.phone || '',
             avatar: data.photoURL || data.avatar || currentUser.photoURL || 'https://picsum.photos/seed/user/150/150',
             role: data.role || userRole || 'user',
-            location: data.location || 'Бишкек, Кыргызстан',
+            location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
             bio: data.bio || '',
             followersCount: data.followersCount || 0,
             followingCount: data.followingCount || 0,
@@ -299,7 +299,7 @@ export default function App() {
                       email: data.email || '',
                       avatar: data.photoURL || 'https://picsum.photos/seed/user/150/150',
                       role: data.role || 'user',
-                      location: data.location || 'Бишкек, Кыргызстан',
+                      location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
                       bio: data.bio || '',
                       followersCount: data.followersCount || 0,
                       followingCount: data.followingCount || 0,
@@ -341,7 +341,7 @@ export default function App() {
                 email: data.email || '',
                 avatar: data.photoURL || 'https://picsum.photos/seed/user/150/150',
                 role: data.role || 'user',
-                location: data.location || 'Бишкек, Кыргызстан',
+                location: data.location || `${weather?.city || 'Бишкек'}, Кыргызстан`,
                 bio: data.bio || '',
                 followersCount: data.followersCount || 0,
                 followingCount: data.followingCount || 0,
@@ -434,7 +434,7 @@ export default function App() {
             view === 'feed' ? t('feed') :
             view === 'profile' ? (selectedUserProfile?.name || t('profile')) : 'EGIN'
           } 
-          location={view === 'market' ? 'Бишкек, Кыргызстан' : undefined}
+          location={view === 'market' ? `${weather?.city || 'Бишкек'}, Кыргызстан` : undefined}
           showBack={view !== 'home'}
           weather={weather}
           onSearchClick={['home', 'market', 'ai', 'feed', 'communities'].includes(view) ? () => setView('ai_search') : undefined}

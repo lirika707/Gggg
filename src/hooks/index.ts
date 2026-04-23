@@ -141,7 +141,7 @@ export const useFavorites = (userId?: string) => {
 };
 
 export const useWeather = () => {
-  const [weather, setWeather] = useState<{ temp: string, desc: string } | null>(null);
+  const [weather, setWeather] = useState<{ temp: string, desc: string, city: string } | null>(null);
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -151,7 +151,8 @@ export const useWeather = () => {
           const data = await res.json();
           setWeather({
             temp: data.current_condition[0].temp_C,
-            desc: data.current_condition[0].lang_ru[0].value
+            desc: data.current_condition[0].lang_ru[0].value,
+            city: data.nearest_area[0].areaName[0].value
           });
         } catch (e) {
           console.error("Weather fetch error", e);

@@ -1,4 +1,4 @@
-import { analyzePlantImage, fileToBase64, type PlantDiagnosisResult } from '../services/aiAPI';
+import { analyzePlantImage, chatWithAI, fileToBase64, type PlantDiagnosisResult } from '../services/aiAPI';
 import { GoogleGenAI } from '@google/genai';
 import {
     AlertTriangle,
@@ -125,51 +125,23 @@ export const AIAssistantPage = ({ setView, weather }: { setView: (v: View) => vo
         createdAt: serverTimestamp()
       });
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
       // Build dynamic chat history for Gemini
-      const newContents = messages.filter(m => m.id !== 'welcome').map(msg => {
+      const history = messages.filter(m => m.id !== 'welcome').map(msg => {
         const msgParts: any[] = [];
-        if (msg.image) {
-          try {
-            const base64Data = msg.image.split(',')[1];
-            const mimeType = msg.image.split(',')[0].split(':')[1].split(';')[0];
-            msgParts.push({ inlineData: { data: base64Data, mimeType } });
-          } catch (e) {
-            console.error("Could not parse image for history", e);
-          }
-        }
         if (msg.text.trim()) {
           msgParts.push({ text: msg.text });
         }
         return { role: msg.sender === 'user' ? 'user' : 'model', parts: msgParts };
       });
       
-      // Append current user message
-      const currentParts: any[] = [];
-      const imagePresent = !!currentImage;
-      if (imagePresent) {
-        const base64Data = currentImage.split(',')[1];
-        const mimeType = currentImage.split(',')[0].split(':')[1].split(';')[0];
-        currentParts.push({ inlineData: { data: base64Data, mimeType } });
-      }
-      
       let finalPrompt = text;
       if (weather) {
         finalPrompt = `[Текущая погода: ${weather.temp}°C, ${weather.desc}]. ${finalPrompt}`;
       }
       
-      if (finalPrompt.trim()) {
-        currentParts.push({ text: finalPrompt });
-      }
-      
-      newContents.push({ role: 'user', parts: currentParts });
+      history.push({ role: 'user', parts: [{ text: finalPrompt }] });
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: newContents,
-        config: {
-          systemInstruction: `Вы — опытный и дружелюбный ИИ-помощник фермер и агроном. Ваша задача — помогать фермерам. Вы отлично разбираетесь в болезнях растений, урожае, удобрениях, ценах на местном рынке и поиске покупателей. 
+      const systemInstruction = `Вы — опытный и дружелюбный ИИ-помощник фермер и агроном. Ваша задача — помогать фермерам. Вы отлично разбираетесь в болезнях растений, урожае, удобрениях, ценах на местном рынке и поиске покупателей. 
           
           Если вас просят проанализировать фото культуры:
           - Проведите детальный осмотр: определите признаки заболеваний (грибок, вредители, нехватка нутриентов).
@@ -182,12 +154,10 @@ export const AIAssistantPage = ({ setView, weather }: { setView: (v: View) => vo
           - Учитывайте предоставленные текущие погодные условия.
           - Предложите конкретные, структурированные агротехнические советы на ближайшие дни.
           
-          Общайтесь профессионально, просто и понятно, как опытный коллега-агроном. Форматируйте ответ красиво (используйте Markdown, заголовки, списки). Будьте конкретны и лаконичны.`,
-          tools: [{ googleSearch: {} }]
-        }
-      });
+          Общайтесь профессионально, просто и понятно, как опытный коллега-агроном. Форматируйте ответ красиво (используйте Markdown, заголовки, списки). Будьте конкретны и лаконичны.`;
 
-      const aiText = response.text || 'Извините, я не смог сформулировать ответ.';
+      // Call our Cloud Function instead of direct SDK in browser
+      const aiText = await chatWithAI(history, systemInstruction, currentImage);
 
       // Save AI response to Firestore
       await addDoc(collection(db, 'users', currentUser.uid, 'ai_messages'), {
@@ -215,13 +185,7 @@ export const AIAssistantPage = ({ setView, weather }: { setView: (v: View) => vo
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-50 dark:bg-slate-950">
-      {/* AI Info Header */}
-      <div className="px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">AI помощник фермера</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Определит болезни по фото, подскажет лечение и цены</p>
-      </div>
-
+    <div className="flex flex-col h-[calc(100vh-180px)] bg-slate-50 dark:bg-slate-950">
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 no-scrollbar">
         {messages.map((msg) => (
