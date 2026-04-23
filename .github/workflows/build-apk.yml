@@ -34,10 +34,14 @@ jobs:
           distribution: 'temurin'
 
       - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 33
+          build-tools-version: 33.0.0
+
+      - name: Build React app
         run: |
-          echo yes | sdkmanager --licenses
-          sdkmanager "platforms;android-33"
-          sdkmanager "build-tools;33.0.0"
+          npm run build
 
       - name: Add Android platform to Capacitor
         run: |
@@ -50,6 +54,7 @@ jobs:
       - name: Build release APK
         run: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleRelease
 
       - name: Upload APK artifact
